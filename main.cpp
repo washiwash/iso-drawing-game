@@ -20,6 +20,7 @@ int main()
     Event ev;
 
     // Ask the user for the number of vertices and edges
+    //EXAMPLE
     int numVertices, numEdges;
     cout << "Enter the number of vertices: ";
     cin >> numVertices;
