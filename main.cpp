@@ -7,7 +7,7 @@
 using namespace std;
 using namespace sf;
 
-float calculateDistance(const Vector2f& point1, const Vector2f& point2)//Euclidean Distance Formula
+float calculateDistance(const Vector2f& point1, const Vector2f& point2)
 {
     float distanceX = point2.x - point1.x;
     float distanceY = point2.y - point1.y;
