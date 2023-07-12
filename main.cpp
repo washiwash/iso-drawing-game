@@ -20,16 +20,34 @@ int main()
     Event ev;
 
     // Ask the user for the number of vertices and edges
-    //EXAMPLE
     int numVertices, numEdges;
-    cout << "Enter the number of vertices: ";
-    cin >> numVertices;
-    cout << "Enter the number of edges: ";
-    cin >> numEdges;
+    
+    while(true) {
+        cout << "Enter the number of vertices: ";
+        cin >> numVertices;
+        if(numVertices < 4) {
+            cout << "Number of vertices must be greater or equal to 4.\n";
+            continue;
+        }
+        else
+            break;
+    }
 
+    while(true) {
+        cout << "Enter the number of edges: ";
+        cin >> numEdges;
+        if(numEdges < 4) {
+            cout << "Number of vertices must be greater or equal to 4.\n";
+            continue;
+        }
+        else
+            break;
+    }
+    
     // Create a vector to store the vertices and edges
     vector<CircleShape> vertices(numVertices);
     vector<Vertex> edges(numEdges * 2);
+    int vertex[numVertices] = {0};
     int vertexCount = 0;
     int edgeCount = 0;
 
@@ -78,7 +96,7 @@ int main()
 
                         // Create a circle shape at the mouse position
                         CircleShape vertex(5);
-                        vertex.setFillColor(Color::Red);
+                        vertex.setFillColor(Color::White);
                         vertex.setPosition(mousePosition);
 
                         // Add the vertex to the vector
@@ -132,8 +150,8 @@ int main()
 
                                 Vertex line[] =
                                 {
-                                    Vertex(startPoint, Color(0,0,0,0)),
-                                    Vertex(endPoint, Color(0,0,0,0))
+                                    Vertex(startPoint, Color(50,100,150,255)),
+                                    Vertex(endPoint, Color(200,150,100,255))
                                 };
 
                                 // Add the line vertices to the vector
