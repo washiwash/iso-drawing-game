@@ -3,6 +3,8 @@
 #include <SFML/System.hpp>
 #include <SFML/Window.hpp>
 #include <cmath>
+#include <vector>
+#include <stack>
 
 using namespace std;
 using namespace sf;
@@ -21,11 +23,13 @@ int main()
 
     // Ask the user for the number of vertices and edges
     int numVertices, numEdges;
-    
-    while(true) {
+
+    while (true)
+    {
         cout << "Enter the number of vertices: ";
         cin >> numVertices;
-        if(numVertices < 4) {
+        if (numVertices < 4)
+        {
             cout << "Number of vertices must be greater or equal to 4.\n";
             continue;
         }
@@ -33,21 +37,26 @@ int main()
             break;
     }
 
-    while(true) {
+    while (true)
+    {
         cout << "Enter the number of edges: ";
         cin >> numEdges;
-        if(numEdges < 4) {
-            cout << "Number of vertices must be greater or equal to 4.\n";
+        if (numEdges < 4)
+        {
+            cout << "Number of edges must be greater or equal to 4.\n";
             continue;
         }
         else
             break;
     }
-    
+
     // Create a vector to store the vertices and edges
     vector<CircleShape> vertices(numVertices);
     vector<Vertex> edges(numEdges * 2);
-    int vertex[numVertices] = {0};
+    stack<vector<CircleShape>> prevVerticesStack;
+    stack<vector<Vertex>> prevEdgesStack;
+    stack<int> prevVertexCountStack;
+    stack<int> prevEdgeCountStack;
     int vertexCount = 0;
     int edgeCount = 0;
 
@@ -84,6 +93,25 @@ int main()
                     startVertexIndex = -1;
                     cout << "Edge Tool is Active" << endl;
                 }
+                else if (ev.key.code == Keyboard::Z && ev.key.control)
+                {
+                    // Undo the previous modification
+                    if (!prevVerticesStack.empty() && !prevEdgesStack.empty() &&
+                        !prevVertexCountStack.empty() && !prevEdgeCountStack.empty())
+                    {
+                        // Restore the previous state
+                        vertices = prevVerticesStack.top();
+                        edges = prevEdgesStack.top();
+                        vertexCount = prevVertexCountStack.top();
+                        edgeCount = prevEdgeCountStack.top();
+
+                        // Pop the previous state from the stacks
+                        prevVerticesStack.pop();
+                        prevEdgesStack.pop();
+                        prevVertexCountStack.pop();
+                        prevEdgeCountStack.pop();
+                    }
+                }
                 break;
 
             case Event::MouseButtonPressed:
@@ -98,6 +126,10 @@ int main()
                         CircleShape vertex(5);
                         vertex.setFillColor(Color::White);
                         vertex.setPosition(mousePosition);
+
+                        // Save the previous state before modifying vertices
+                        prevVerticesStack.push(vertices);
+                        prevVertexCountStack.push(vertexCount);
 
                         // Add the vertex to the vector
                         vertices[vertexCount] = vertex;
@@ -150,9 +182,15 @@ int main()
 
                                 Vertex line[] =
                                 {
-                                    Vertex(startPoint, Color(50,100,150,255)),
-                                    Vertex(endPoint, Color(200,150,100,255))
+                                    Vertex(startPoint, Color(50, 100, 150, 255)),
+                                    Vertex(endPoint, Color(200, 150, 100, 255))
                                 };
+
+                                // Save the previous state before modifying edges
+                                prevVerticesStack.push(vertices);
+                                prevEdgesStack.push(edges);
+                                prevVertexCountStack.push(vertexCount);
+                                prevEdgeCountStack.push(edgeCount);
 
                                 // Add the line vertices to the vector
                                 edges[edgeCount * 2] = line[0];
@@ -177,9 +215,9 @@ int main()
         window.clear(Color(0, 0, 0, 255)); // Clear old frame
 
         // Draw the vertices
-        for (const auto& vertex : vertices)
+        for (int i = 0; i < vertexCount; i++)
         {
-            window.draw(vertex);
+            window.draw(vertices[i]);
         }
 
         // Draw the edges
