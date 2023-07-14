@@ -53,9 +53,7 @@ int main()
     // Create a vector to store the vertices and edges
     vector<CircleShape> vertices(numVertices);
     vector<Vertex> edges(numEdges * 2);
-    stack<vector<CircleShape>> prevVerticesStack;
     stack<vector<Vertex>> prevEdgesStack;
-    stack<int> prevVertexCountStack;
     stack<int> prevEdgeCountStack;
     int vertexCount = 0;
     int edgeCount = 0;
@@ -96,19 +94,16 @@ int main()
                 else if (ev.key.code == Keyboard::Z && ev.key.control)
                 {
                     // Undo the previous modification
-                    if (!prevVerticesStack.empty() && !prevEdgesStack.empty() &&
-                        !prevVertexCountStack.empty() && !prevEdgeCountStack.empty())
+                    if (!prevEdgesStack.empty() && !prevEdgeCountStack.empty())
                     {
                         // Restore the previous state
-                        vertices = prevVerticesStack.top();
+                        
                         edges = prevEdgesStack.top();
-                        vertexCount = prevVertexCountStack.top();
+                    
                         edgeCount = prevEdgeCountStack.top();
 
                         // Pop the previous state from the stacks
-                        prevVerticesStack.pop();
                         prevEdgesStack.pop();
-                        prevVertexCountStack.pop();
                         prevEdgeCountStack.pop();
                     }
                 }
@@ -127,10 +122,7 @@ int main()
                         vertex.setFillColor(Color::White);
                         vertex.setPosition(mousePosition);
 
-                        // Save the previous state before modifying vertices
-                        prevVerticesStack.push(vertices);
-                        prevVertexCountStack.push(vertexCount);
-
+                        
                         // Add the vertex to the vector
                         vertices[vertexCount] = vertex;
 
@@ -187,9 +179,7 @@ int main()
                                 };
 
                                 // Save the previous state before modifying edges
-                                prevVerticesStack.push(vertices);
                                 prevEdgesStack.push(edges);
-                                prevVertexCountStack.push(vertexCount);
                                 prevEdgeCountStack.push(edgeCount);
 
                                 // Add the line vertices to the vector
