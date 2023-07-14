@@ -22,37 +22,34 @@ int main()
     Event ev;
 
     // Ask the user for the number of vertices and edges
-    int numVertices, numEdges;
+    int numVertices = 0, numEdges = 0;
 
-    while (true)
+    // Import font file
+    Font roboto;
+    if (!roboto.loadFromFile("src/font/Roboto-Light.ttf"))
     {
-        cout << "Enter the number of vertices: ";
-        cin >> numVertices;
-        if (numVertices < 4)
-        {
-            cout << "Number of vertices must be greater or equal to 4.\n";
-            continue;
-        }
-        else
-            break;
+        cerr << "Failed to load font file" << endl;
+        return 1;
     }
 
-    while (true)
-    {
-        cout << "Enter the number of edges: ";
-        cin >> numEdges;
-        if (numEdges < 4)
-        {
-            cout << "Number of edges must be greater or equal to 4.\n";
-            continue;
-        }
-        else
-            break;
-    }
+    sf::Text promptText;
+    promptText.setFont(roboto);
+    promptText.setCharacterSize(24);
+    promptText.setFillColor(sf::Color::White);
+    promptText.setPosition(20, 20);
+    
+    sf::Text inputText;
+    inputText.setFont(roboto);
+    inputText.setCharacterSize(24);
+    inputText.setFillColor(sf::Color::White);
+    inputText.setPosition(20, 60);
+
+    bool isEnteringVertices = true;
+    bool isEnteringEdges = false;
 
     // Create a vector to store the vertices and edges
-    vector<CircleShape> vertices(numVertices);
-    vector<Vertex> edges(numEdges * 2);
+    vector<CircleShape> vertices;
+    vector<Vertex> edges;
     stack<vector<Vertex>> prevEdgesStack;
     stack<int> prevEdgeCountStack;
     int vertexCount = 0;
@@ -62,8 +59,7 @@ int main()
     bool edgeToolActive = false;
     int startVertexIndex = -1;
 
-    // Game loop
-    while (window.isOpen())
+    while (true)
     {
         // Event polling
         while (window.pollEvent(ev))
@@ -74,135 +70,196 @@ int main()
                 window.close();
                 break;
 
-            case Event::KeyPressed:
-                if (ev.key.code == Keyboard::Escape)
-                    window.close();
-                else if (ev.key.code == Keyboard::F)
+            case Event::TextEntered:
+                if (isEnteringVertices)
                 {
-                    vertexToolActive = true;
-                    edgeToolActive = false;
-                    startVertexIndex = -1;
-                    cout << "Vertex Tool is Active" << endl;
-                }
-                else if (ev.key.code == Keyboard::G)
-                {
-                    edgeToolActive = true;
-                    vertexToolActive = false;
-                    startVertexIndex = -1;
-                    cout << "Edge Tool is Active" << endl;
-                }
-                else if (ev.key.code == Keyboard::Z && ev.key.control)
-                {
-                    // Undo the previous modification
-                    if (!prevEdgesStack.empty() && !prevEdgeCountStack.empty())
+                    if (ev.text.unicode >= '0' && ev.text.unicode <= '9')
                     {
-                        // Restore the previous state
-                        
-                        edges = prevEdgesStack.top();
-                    
-                        edgeCount = prevEdgeCountStack.top();
+                        numVertices = ev.text.unicode - '0';
 
-                        // Pop the previous state from the stacks
-                        prevEdgesStack.pop();
-                        prevEdgeCountStack.pop();
+                        inputText.setString(to_string(numVertices));
+                    }
+                    else if (ev.text.unicode == '\r')
+                    {
+                        isEnteringVertices = false;
+                        isEnteringEdges = true;
+
+                        promptText.setString("Enter the number of edges: ");
+                        inputText.setString("");
                     }
                 }
-                break;
-
-            case Event::MouseButtonPressed:
-                if (ev.mouseButton.button == Mouse::Left)
+                else if (isEnteringEdges)
                 {
-                    if (vertexToolActive && vertexCount < numVertices)
+                    if (ev.text.unicode >= '0' && ev.text.unicode <= '9')
                     {
-                        // Get the mouse position relative to the window
-                        Vector2f mousePosition = static_cast<Vector2f>(Mouse::getPosition(window));
+                        numEdges = ev.text.unicode - '0';
 
-                        // Create a circle shape at the mouse position
-                        CircleShape vertex(5);
-                        vertex.setFillColor(Color::White);
-                        vertex.setPosition(mousePosition);
-
-                        
-                        // Add the vertex to the vector
-                        vertices[vertexCount] = vertex;
-
-                        // Increment the vertex count
-                        vertexCount++;
+                        inputText.setString(to_string(numEdges));
                     }
-                    else if (edgeToolActive && edgeCount < numEdges)
+                    else if (ev.text.unicode == '\r')
                     {
-                        // Get the mouse position relative to the window
-                        Vector2f mousePosition = static_cast<Vector2f>(Mouse::getPosition(window));
-
-                        if (startVertexIndex == -1)
-                        {
-                            // Find the closest vertex to the mouse position
-                            float closestDistance = numeric_limits<float>::max();
-                            for (int i = 0; i < vertexCount; i++)
-                            {
-                                float distance = calculateDistance(mousePosition, vertices[i].getPosition());
-                                if (distance < closestDistance)
-                                {
-                                    closestDistance = distance;
-                                    startVertexIndex = i;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            // Create an edge between the start vertex and the end vertex
-                            // Find the closest vertex to the mouse position
-                            float closestDistance = numeric_limits<float>::max();
-                            int endVertexIndex = -1;
-                            for (int i = 0; i < vertexCount; i++)
-                            {
-                                if (i != startVertexIndex)
-                                {
-                                    float distance = calculateDistance(mousePosition, vertices[i].getPosition());
-                                    if (distance < closestDistance)
-                                    {
-                                        closestDistance = distance;
-                                        endVertexIndex = i;
-                                    }
-                                }
-                            }
-
-                            if (endVertexIndex != -1)
-                            {
-                                Vector2f startPoint = vertices[startVertexIndex].getPosition();
-                                Vector2f endPoint = vertices[endVertexIndex].getPosition();
-
-                                Vertex line[] =
-                                {
-                                    Vertex(startPoint, Color(50, 100, 150, 255)),
-                                    Vertex(endPoint, Color(200, 150, 100, 255))
-                                };
-
-                                // Save the previous state before modifying edges
-                                prevEdgesStack.push(edges);
-                                prevEdgeCountStack.push(edgeCount);
-
-                                // Add the line vertices to the vector
-                                edges[edgeCount * 2] = line[0];
-                                edges[edgeCount * 2 + 1] = line[1];
-
-                                // Increment the edge count
-                                edgeCount++;
-
-                                // Reset the start vertex index
-                                startVertexIndex = -1;
-                            }
-                        }
+                        isEnteringEdges = false;
+                        // Continue with the rest of the code
+                        break;
                     }
                 }
                 break;
             }
         }
 
-        // Update
+        if (isEnteringVertices)
+        {
+            promptText.setString("Enter the number of vertices: ");
+        }
+        else if (isEnteringEdges)
+        {
+            promptText.setString("Enter the number of edges: ");
+        }
+        else
+        {
+            if (numVertices < 4)
+            {
+                promptText.setString("Number of vertices must be greater or equal to 4. Re-enter the number of vertices: ");
+                isEnteringVertices = true;
+                inputText.setString("");
+                continue;
+            }
+
+            if (numEdges < 4)
+            {
+                promptText.setString("Number of edges must be greater or equal to 4. Re-enter the number of edges: ");
+                isEnteringEdges = true;
+                inputText.setString("");
+                continue;
+            }
+
+            // Handle other events and update the game state
+            switch (ev.type)
+            {
+                case Event::KeyPressed:
+                    if (ev.key.code == Keyboard::Escape)
+                        window.close();
+                    else if (ev.key.code == Keyboard::F)
+                    {
+                        vertexToolActive = true;
+                        edgeToolActive = false;
+                        startVertexIndex = -1;
+                        cout << "Vertex Tool is Active" << endl;
+                    }
+                    else if (ev.key.code == Keyboard::G)
+                    {
+                        edgeToolActive = true;
+                        vertexToolActive = false;
+                        startVertexIndex = -1;
+                        cout << "Edge Tool is Active" << endl;
+                    }
+                    else if (ev.key.code == Keyboard::Z && ev.key.control)
+                    {
+                        // Undo the previous modification
+                        if (!prevEdgesStack.empty() && !prevEdgeCountStack.empty())
+                        {
+                            // Restore the previous state
+                            edges = prevEdgesStack.top();
+                            edgeCount = prevEdgeCountStack.top();
+
+                            // Pop the previous state from the stacks
+                            prevEdgesStack.pop();
+                            prevEdgeCountStack.pop();
+                        }
+                    }
+                    break;
+
+                case Event::MouseButtonPressed:
+                    if (ev.mouseButton.button == Mouse::Left)
+                    {
+                        if (vertexToolActive && vertexCount < numVertices)
+                        {
+                            // Get the mouse position relative to the window
+                            Vector2f mousePosition = static_cast<Vector2f>(Mouse::getPosition(window));
+
+                            // Create a circle shape at the mouse position
+                            CircleShape vertex(5);
+                            vertex.setFillColor(Color::White);
+                            vertex.setPosition(mousePosition);
+
+                            // Add the vertex to the vector
+                            vertices.push_back(vertex);
+
+                            // Increment the vertex count
+                            vertexCount++;
+                        }
+                        else if (edgeToolActive && edgeCount < numEdges)
+                        {
+                            // Get the mouse position relative to the window
+                            Vector2f mousePosition = static_cast<Vector2f>(Mouse::getPosition(window));
+
+                            if (startVertexIndex == -1)
+                            {
+                                // Find the closest vertex to the mouse position
+                                float closestDistance = numeric_limits<float>::max();
+                                for (int i = 0; i < vertexCount; i++)
+                                {
+                                    float distance = calculateDistance(mousePosition, vertices[i].getPosition());
+                                    if (distance < closestDistance)
+                                    {
+                                        closestDistance = distance;
+                                        startVertexIndex = i;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                // Create an edge between the start vertex and the end vertex
+                                // Find the closest vertex to the mouse position
+                                float closestDistance = numeric_limits<float>::max();
+                                int endVertexIndex = -1;
+                                for (int i = 0; i < vertexCount; i++)
+                                {
+                                    if (i != startVertexIndex)
+                                    {
+                                        float distance = calculateDistance(mousePosition, vertices[i].getPosition());
+                                        if (distance < closestDistance)
+                                        {
+                                            closestDistance = distance;
+                                            endVertexIndex = i;
+                                        }
+                                    }
+                                }
+
+                                if (endVertexIndex != -1)
+                                {
+                                    Vector2f startPoint = vertices[startVertexIndex].getPosition();
+                                    Vector2f endPoint = vertices[endVertexIndex].getPosition();
+
+                                    Vertex line[] =
+                                    {
+                                        Vertex(startPoint, Color(50, 100, 150, 255)),
+                                        Vertex(endPoint, Color(200, 150, 100, 255))
+                                    };
+
+                                    // Save the previous state before modifying edges
+                                    prevEdgesStack.push(edges);
+                                    prevEdgeCountStack.push(edgeCount);
+
+                                    // Add the line vertices to the vector
+                                    edges.push_back(line[0]);
+                                    edges.push_back(line[1]);
+
+                                    // Increment the edge count
+                                    edgeCount++;
+
+                                    // Reset the start vertex index
+                                    startVertexIndex = -1;
+                                }
+                            }
+                        }
+                    }
+                    break;
+            }
+        }
 
         // Render
-        window.clear(Color(0, 0, 0, 255)); // Clear old frame
+        window.clear(Color::Black);
 
         // Draw the vertices
         for (int i = 0; i < vertexCount; i++)
@@ -210,10 +267,13 @@ int main()
             window.draw(vertices[i]);
         }
 
+        window.draw(promptText);
+        window.draw(inputText);
+
         // Draw the edges
         window.draw(&edges[0], edgeCount * 2, Lines);
 
-        window.display(); // Tell app that window is done drawing
+        window.display();
     }
 
     // End of app
