@@ -16,6 +16,13 @@ float calculateDistance(const Vector2f& point1, const Vector2f& point2)
     return sqrt(distanceX * distanceX + distanceY * distanceY);
 }
 
+Vector2f getCenter(const CircleShape& shape)
+{
+    Vector2f position = shape.getPosition();
+    float radius = shape.getRadius();
+    return Vector2f(position.x + radius, position.y + radius);
+}
+
 int main()
 {
     RenderWindow window(VideoMode(640, 480), "Polygon Drawer", Style::Titlebar | Style::Close);
@@ -169,8 +176,8 @@ int main()
 
                             if (endVertexIndex != -1)
                             {
-                                Vector2f startPoint = vertices[startVertexIndex].getPosition();
-                                Vector2f endPoint = vertices[endVertexIndex].getPosition();
+                                Vector2f startPoint = getCenter(vertices[startVertexIndex]);
+                                Vector2f endPoint = getCenter(vertices[endVertexIndex]);
 
                                 Vertex line[] =
                                 {
