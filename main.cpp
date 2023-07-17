@@ -69,6 +69,9 @@ int main()
     bool edgeToolActive = false;
     int startVertexIndex = -1;
 
+    vector<vector<int>> adjacencyMatrix(numVertices, vector<int>(numVertices, 0));
+    vector<int> degrees(numVertices, 0);
+
     // Game loop
     while (window.isOpen())
     {
@@ -198,6 +201,61 @@ int main()
 
                                 // Reset the start vertex index
                                 startVertexIndex = -1;
+                            }
+                            
+                            if (edgeCount == numEdges)
+                            {
+                                for (int i = 0; i < edgeCount; i++)
+                                {
+                                    Vector2f startPoint = edges[i * 2].position;
+                                    Vector2f endPoint = edges[i * 2 + 1].position;
+
+                                    int startVertex = -1;
+                                    int endVertex = -1;
+
+                                    // Find the index of start and end vertices in the vertices vector
+                                    for (int j = 0; j < vertexCount; j++)
+                                    {
+                                        if (getCenter(vertices[j]) == startPoint)
+                                            startVertex = j;
+                                        if (getCenter(vertices[j]) == endPoint)
+                                            endVertex = j;
+                                    }
+
+                                    if (startVertex != -1 && endVertex != -1)
+                                    {
+                                        adjacencyMatrix[startVertex][endVertex] = 1;
+                                        adjacencyMatrix[endVertex][startVertex] = 1;
+                                    }
+                                }
+
+                                // Output the adjacency matrix
+                                cout << "\nAdjacency Matrix:" << endl;
+                                for (int i = 0; i < numVertices; i++)
+                                {
+                                    for (int j = 0; j < numVertices; j++)
+                                    {
+                                        cout << adjacencyMatrix[i][j] << " ";
+                                    }
+                                    cout << endl;
+                                }
+                                
+                                for (int i = 0; i < numVertices; i++)
+                                {
+                                    int degree = 0;
+                                    for (int j = 0; j < numVertices; j++)
+                                    {
+                                        degree += adjacencyMatrix[i][j];
+                                    }
+                                    degrees[i] = degree;
+                                }
+
+                                // Output the degree of each vertex
+                                cout << "\nDegree of the Graph:" << endl;
+                                for (int i = 0; i < numVertices; i++)
+                                {
+                                    cout << "Vertex " << i+1 << ": " << degrees[i] << endl;
+                                }
                             }
                         }
                     }
