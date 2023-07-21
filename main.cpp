@@ -224,8 +224,8 @@ int main()
 
                                     if (startVertex != -1 && endVertex != -1)
                                     {
-                                        adjacencyMatrix[startVertex][endVertex] = 1;
-                                        adjacencyMatrix[endVertex][startVertex] = 1;
+                                        adjacencyMatrix[startVertex][endVertex] += 1;
+                                        adjacencyMatrix[endVertex][startVertex] += 1;
                                     }
                                 }
 
