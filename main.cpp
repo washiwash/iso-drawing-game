@@ -25,7 +25,7 @@ Vector2f getCenter(const CircleShape& shape)
 
 int main()
 {
-    RenderWindow window(VideoMode(640, 480), "Polygon Drawer", Style::Titlebar | Style::Close);
+    RenderWindow window(VideoMode(800, 600), "Isomorphic Graph Generator", Style::Titlebar | Style::Close);
     Event ev;
 
     // Ask the user for the number of vertices and edges
@@ -78,6 +78,32 @@ int main()
         // Event polling
         while (window.pollEvent(ev))
         {
+            // Vertex lights up when the mouse cursor hovers over it
+            if(ev.MouseEntered && edgeToolActive && vertexCount > 0)
+            {
+                // Get the mouse position relative to the window
+                Vector2f mousePosition = static_cast<Vector2f>(Mouse::getPosition(window));
+
+                // Find the closest vertex to the mouse position
+                float closestDistance = 18;
+                for (int i = 0; i < vertexCount; i++)
+                {
+                    float distance = calculateDistance(mousePosition, vertices[i].getPosition());
+                    if (distance < closestDistance)
+                    {
+                        vertices[i].setFillColor(Color::Yellow);
+                    }
+                    else
+                    {
+                        vertices[i].setFillColor(Color::White);
+                    }
+                }         
+            }
+            else for (int i = 0; i < vertexCount; i++)
+            {
+                vertices[i].setFillColor(Color::White);
+            }
+
             switch (ev.type)
             {
             case Event::Closed:
@@ -128,7 +154,7 @@ int main()
                         Vector2f mousePosition = static_cast<Vector2f>(Mouse::getPosition(window));
 
                         // Create a circle shape at the mouse position
-                        CircleShape vertex(5);
+                        CircleShape vertex(10);
                         vertex.setFillColor(Color::White);
                         vertex.setPosition(mousePosition);
 
@@ -147,7 +173,7 @@ int main()
                         if (startVertexIndex == -1)
                         {
                             // Find the closest vertex to the mouse position
-                            float closestDistance = numeric_limits<float>::max();
+                            float closestDistance = 18;
                             for (int i = 0; i < vertexCount; i++)
                             {
                                 float distance = calculateDistance(mousePosition, vertices[i].getPosition());
@@ -162,18 +188,15 @@ int main()
                         {
                             // Create an edge between the start vertex and the end vertex
                             // Find the closest vertex to the mouse position
-                            float closestDistance = numeric_limits<float>::max();
+                            float closestDistance = 18;
                             int endVertexIndex = -1;
                             for (int i = 0; i < vertexCount; i++)
                             {
-                                if (i != startVertexIndex)
+                                float distance = calculateDistance(mousePosition, vertices[i].getPosition());
+                                if (distance < closestDistance)
                                 {
-                                    float distance = calculateDistance(mousePosition, vertices[i].getPosition());
-                                    if (distance < closestDistance)
-                                    {
-                                        closestDistance = distance;
-                                        endVertexIndex = i;
-                                    }
+                                    closestDistance = distance;
+                                    endVertexIndex = i;
                                 }
                             }
 
@@ -181,7 +204,7 @@ int main()
                             {
                                 Vector2f startPoint = getCenter(vertices[startVertexIndex]);
                                 Vector2f endPoint = getCenter(vertices[endVertexIndex]);
-
+                                
                                 Vertex line[] =
                                 {
                                     Vertex(startPoint, Color(50, 100, 150, 255)),
@@ -222,15 +245,18 @@ int main()
                                             endVertex = j;
                                     }
 
-                                    if (startVertex != -1 && endVertex != -1)
+                                    if (startVertex != -1 && endVertex != -1 && !(startVertex == endVertex))
                                     {
                                         adjacencyMatrix[startVertex][endVertex] += 1;
                                         adjacencyMatrix[endVertex][startVertex] += 1;
                                     }
+                                    else
+                                        adjacencyMatrix[startVertex][endVertex] += 1;
                                 }
 
                                 // Output the adjacency matrix
                                 cout << "\nAdjacency Matrix:" << endl;
+
                                 for (int i = 0; i < numVertices; i++)
                                 {
                                     for (int j = 0; j < numVertices; j++)
@@ -252,6 +278,7 @@ int main()
 
                                 // Output the degree of each vertex
                                 cout << "\nDegree of the Graph:" << endl;
+
                                 for (int i = 0; i < numVertices; i++)
                                 {
                                     cout << "Vertex " << i+1 << ": " << degrees[i] << endl;
