@@ -79,7 +79,7 @@ int main()
         while (window.pollEvent(ev))
         {
             // Vertex lights up when the mouse cursor hovers over it
-            if(ev.MouseEntered && edgeToolActive && vertexCount > 0)
+            if (ev.type == Event::MouseMoved && edgeToolActive && vertexCount > 0)
             {
                 // Get the mouse position relative to the window
                 Vector2f mousePosition = static_cast<Vector2f>(Mouse::getPosition(window));
@@ -97,11 +97,14 @@ int main()
                     {
                         vertices[i].setFillColor(Color::White);
                     }
-                }         
+                }
             }
-            else for (int i = 0; i < vertexCount; i++)
+            else
             {
-                vertices[i].setFillColor(Color::White);
+                for (int i = 0; i < vertexCount; i++)
+                {
+                    vertices[i].setFillColor(Color::White);
+                }
             }
 
             switch (ev.type)
@@ -133,9 +136,7 @@ int main()
                     if (!prevEdgesStack.empty() && !prevEdgeCountStack.empty())
                     {
                         // Restore the previous state
-                        
                         edges = prevEdgesStack.top();
-                    
                         edgeCount = prevEdgeCountStack.top();
 
                         // Pop the previous state from the stacks
@@ -158,7 +159,6 @@ int main()
                         vertex.setFillColor(Color::White);
                         vertex.setPosition(mousePosition);
 
-                        
                         // Add the vertex to the vector
                         vertices[vertexCount] = vertex;
 
@@ -186,7 +186,7 @@ int main()
                         }
                         else
                         {
-                            // Create an edge between the start vertex and the end vertex                                
+                            // Create an edge between the start vertex and the end vertex
                             // Find the closest vertex to the mouse position
                             float closestDistance = 18;
                             int endVertexIndex = -1;
@@ -204,7 +204,7 @@ int main()
                             {
                                 Vector2f startPoint = getCenter(vertices[startVertexIndex]);
                                 Vector2f endPoint = getCenter(vertices[endVertexIndex]);
-                                
+
                                 Vertex line[] =
                                 {
                                     Vertex(startPoint, Color(50, 100, 150, 255)),
@@ -225,7 +225,7 @@ int main()
                                 // Reset the start vertex index
                                 startVertexIndex = -1;
                             }
-                            
+
                             if (edgeCount == numEdges)
                             {
                                 for (int i = 0; i < edgeCount; i++)
@@ -265,7 +265,7 @@ int main()
                                     }
                                     cout << endl;
                                 }
-                                
+
                                 for (int i = 0; i < numVertices; i++)
                                 {
                                     int degree = 0;
@@ -281,7 +281,93 @@ int main()
 
                                 for (int i = 0; i < numVertices; i++)
                                 {
-                                    cout << "Vertex " << i+1 << ": " << degrees[i] << endl;
+                                    cout << "Vertex " << i + 1 << ": " << degrees[i] << endl;
+                                }
+
+                                // Generate and display the 2-isomorphism graphs
+                                vector<CircleShape> isomorphicVertices1(numVertices);
+                                vector<CircleShape> isomorphicVertices2(numVertices);
+                                float angleIncrement1 = 2 * 3.14159f / numVertices;
+                                float angleIncrement2 = 3 * 3.14159f / numVertices;
+                                float radius1 = 100.f;
+                                float radius2 = 200.f;
+                                Vector2f center1(300.f, 300.f);
+                                Vector2f center2(600.f, 300.f);
+
+                                for (int i = 0; i < numVertices; i++)
+                                {
+                                    CircleShape vertex1(10);
+                                    vertex1.setFillColor(Color::Green);
+                                    CircleShape vertex2(10);
+                                    vertex2.setFillColor(Color::Red);
+
+                                    float angle1 = i * angleIncrement1;
+                                    float angle2 = i * angleIncrement2;
+                                    Vector2f position1(center1.x + radius1 * cos(angle1), center1.y + radius1 * sin(angle1));
+                                    Vector2f position2(center2.x + radius2 * cos(angle2), center2.y + radius2 * sin(angle2));
+
+                                    vertex1.setPosition(position1);
+                                    isomorphicVertices1[i] = vertex1;
+
+                                    vertex2.setPosition(position2);
+                                    isomorphicVertices2[i] = vertex2;
+                                }
+
+                                RenderWindow isomorphicWindow1(VideoMode(800, 600), "2-Isomorphism Graph 1", Style::Titlebar | Style::Close);
+                                RenderWindow isomorphicWindow2(VideoMode(800, 600), "2-Isomorphism Graph 2", Style::Titlebar | Style::Close);
+
+                                while (isomorphicWindow1.isOpen() || isomorphicWindow2.isOpen())
+                                {
+                                    Event isomorphicEv1, isomorphicEv2;
+
+                                    while (isomorphicWindow1.pollEvent(isomorphicEv1))
+                                    {
+                                        if (isomorphicEv1.type == Event::Closed)
+                                            isomorphicWindow1.close();
+                                    }
+
+                                    while (isomorphicWindow2.pollEvent(isomorphicEv2))
+                                    {
+                                        if (isomorphicEv2.type == Event::Closed)
+                                            isomorphicWindow2.close();
+                                    }
+
+                                    isomorphicWindow1.clear(Color(0, 0, 0, 255));
+                                    isomorphicWindow2.clear(Color(0, 0, 0, 255));
+
+                                    // Draw the vertices of the isomorphic graphs
+                                    for (size_t i = 0; i < isomorphicVertices1.size(); i++)
+                                    {
+                                        isomorphicWindow1.draw(isomorphicVertices1[i]);
+                                        isomorphicWindow2.draw(isomorphicVertices2[i]);
+                                    }
+
+                                    // Draw the edges of the isomorphic graphs
+                                    for (int i = 0; i < numVertices; i++)
+                                    {
+                                        for (int j = i + 1; j < numVertices; j++)
+                                        {
+                                            if (adjacencyMatrix[i][j] > 0)
+                                            {
+                                                Vertex line1[] =
+                                                {
+                                                    Vertex(isomorphicVertices1[i].getPosition(), Color(50, 100, 150, 255)),
+                                                    Vertex(isomorphicVertices1[j].getPosition(), Color(50, 100, 150, 255))
+                                                };
+                                                Vertex line2[] =
+                                                {
+                                                    Vertex(isomorphicVertices2[i].getPosition(), Color(200, 150, 100, 255)),
+                                                    Vertex(isomorphicVertices2[j].getPosition(), Color(200, 150, 100, 255))
+                                                };
+
+                                                isomorphicWindow1.draw(line1, 2, Lines);
+                                                isomorphicWindow2.draw(line2, 2, Lines);
+                                            }
+                                        }
+                                    }
+
+                                    isomorphicWindow1.display();
+                                    isomorphicWindow2.display();
                                 }
                             }
                         }
@@ -303,7 +389,6 @@ int main()
         }
 
         // Draw the edges
-
         window.draw(&edges[0], edgeCount * 2, Lines);
 
         window.display(); // Tell app that window is done drawing
