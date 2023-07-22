@@ -21,6 +21,16 @@ Vector2f getCenter(const CircleShape& shape)
     return Vector2f(position.x + radius, position.y + radius);
 }
 
+bool isInteger (string input)
+{
+    for (int i = 0; i < input.size(); i++)
+    {
+        if (!isdigit(input[i]))
+            return false;
+    }
+    return true;
+}
+
 int main()
 {
     RenderWindow window(VideoMode(1200, 600), "Isomorphic Graph Generator", Style::Titlebar | Style::Close);
@@ -31,32 +41,39 @@ int main()
     FloatRect isomorphicArea(400.f, 0.f, 800.f, 600.f);
 
     // Ask the user for the number of vertices and edges
+    string numVert, numEdg;
     int numVertices, numEdges;
 
     while (true)
     {
         cout << "Enter the number of vertices: ";
-        cin >> numVertices;
-        if (numVertices < 4)
+        cin >> numVert;
+        if (!isInteger(numVert) || stoi(numVert) < 4)
         {
-            cout << "Number of vertices must be greater or equal to 4.\n";
+            cout << "Input must be a number greater or equal to 4.\n";
             continue;
         }
         else
+        {
+            numVertices = stoi(numVert);
             break;
+        }
     }
 
     while (true)
     {
         cout << "Enter the number of edges: ";
-        cin >> numEdges;
-        if (numEdges < 4)
+        cin >> numEdg;
+        if (!isInteger(numEdg) || stoi(numEdg) < 4)
         {
-            cout << "Number of edges must be greater or equal to 4.\n";
+            cout << "Input must be a number greater or equal to 4.\n";
             continue;
         }
         else
+        {
+            numEdges = stoi(numEdg);
             break;
+        }
     }
 
     // Create a vector to store the vertices and edges
@@ -79,8 +96,8 @@ int main()
     vector<CircleShape> isomorphicVertices2(numVertices);
     float angleIncrement1 = 2 * 3.14159f / numVertices;
     float angleIncrement2 = 3 * 3.14159f / numVertices;
-    float radius1 = 200.f;
-    float radius2 = 200.f;
+    float radius1 = 150.f;
+    float radius2 = 150.f;
 
     // Calculate centers for the isomorphic graphs
     Vector2f center1(isomorphicArea.left + isomorphicArea.width / 4.f, isomorphicArea.top + isomorphicArea.height / 2.f);
@@ -139,7 +156,7 @@ int main()
                     vertices[i].setFillColor(Color::White);
                 }
             }
-
+            
             switch (ev.type)
             {
             case Event::Closed:
@@ -332,7 +349,7 @@ int main()
         }
 
         // Update
-
+        
         // Render
         window.clear(Color(0, 0, 0, 255)); // Clear old frame
 
@@ -364,10 +381,13 @@ int main()
             {
                 if (adjacencyMatrix[i][j] > 0)
                 {
+                    Vector2f startPoint = getCenter(isomorphicVertices1[i]);
+                    Vector2f endPoint = getCenter(isomorphicVertices1[j]);
+
                     Vertex line1[] =
                     {
-                        Vertex(isomorphicVertices1[i].getPosition(), Color(50, 100, 150, 255)),
-                        Vertex(isomorphicVertices1[j].getPosition(), Color(50, 100, 150, 255))
+                        Vertex(startPoint, Color(50, 100, 150, 255)),
+                        Vertex(endPoint, Color(50, 100, 150, 255))
                     };
                     window.draw(line1, 2, Lines);
                 }
@@ -384,10 +404,13 @@ int main()
             {
                 if (adjacencyMatrix[i][j] > 0)
                 {
+                    Vector2f startPoint = getCenter(isomorphicVertices2[i]);
+                    Vector2f endPoint = getCenter(isomorphicVertices2[j]);
+
                     Vertex line2[] =
                     {
-                        Vertex(isomorphicVertices2[i].getPosition(), Color(200, 150, 100, 255)),
-                        Vertex(isomorphicVertices2[j].getPosition(), Color(200, 150, 100, 255))
+                        Vertex(startPoint, Color(200, 150, 100, 255)),
+                        Vertex(endPoint, Color(200, 150, 100, 255))
                     };
                     window.draw(line2, 2, Lines);
                 }
