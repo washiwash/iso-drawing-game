@@ -1,7 +1,5 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
-#include <SFML/System.hpp>
-#include <SFML/Window.hpp>
 #include <cmath>
 #include <vector>
 #include <stack>
@@ -25,8 +23,12 @@ Vector2f getCenter(const CircleShape& shape)
 
 int main()
 {
-    RenderWindow window(VideoMode(800, 600), "Isomorphic Graph Generator", Style::Titlebar | Style::Close);
+    RenderWindow window(VideoMode(1200, 600), "Isomorphic Graph Generator", Style::Titlebar | Style::Close);
     Event ev;
+
+    // Define the designated area for drawing
+    FloatRect drawingArea(0.f, 0.f, 400.f, 600.f);
+    FloatRect isomorphicArea(400.f, 0.f, 800.f, 600.f);
 
     // Ask the user for the number of vertices and edges
     int numVertices, numEdges;
@@ -71,6 +73,37 @@ int main()
 
     vector<vector<int>> adjacencyMatrix(numVertices, vector<int>(numVertices, 0));
     vector<int> degrees(numVertices, 0);
+
+    // Generate and display the 2-isomorphism graphs
+    vector<CircleShape> isomorphicVertices1(numVertices);
+    vector<CircleShape> isomorphicVertices2(numVertices);
+    float angleIncrement1 = 2 * 3.14159f / numVertices;
+    float angleIncrement2 = 3 * 3.14159f / numVertices;
+    float radius1 = 200.f;
+    float radius2 = 200.f;
+
+    // Calculate centers for the isomorphic graphs
+    Vector2f center1(isomorphicArea.left + isomorphicArea.width / 4.f, isomorphicArea.top + isomorphicArea.height / 2.f);
+    Vector2f center2(isomorphicArea.left + isomorphicArea.width * 3.f / 4.f, isomorphicArea.top + isomorphicArea.height / 2.f);
+
+    for (int i = 0; i < numVertices; i++)
+    {
+        CircleShape vertex1(10);
+        vertex1.setFillColor(Color::Green);
+        CircleShape vertex2(10);
+        vertex2.setFillColor(Color::Red);
+
+        float angle1 = i * angleIncrement1;
+        float angle2 = i * angleIncrement2;
+        Vector2f position1(center1.x + radius1 * cos(angle1), center1.y + radius1 * sin(angle1));
+        Vector2f position2(center2.x + radius2 * cos(angle2), center2.y + radius2 * sin(angle2));
+
+        vertex1.setPosition(position1);
+        isomorphicVertices1[i] = vertex1;
+
+        vertex2.setPosition(position2);
+        isomorphicVertices2[i] = vertex2;
+    }
 
     // Game loop
     while (window.isOpen())
@@ -154,6 +187,10 @@ int main()
                         // Get the mouse position relative to the window
                         Vector2f mousePosition = static_cast<Vector2f>(Mouse::getPosition(window));
 
+                        // Check if the mouse is within the designated drawing area
+                        if (!drawingArea.contains(mousePosition))
+                            break;
+
                         // Create a circle shape at the mouse position
                         CircleShape vertex(10);
                         vertex.setFillColor(Color::White);
@@ -169,6 +206,9 @@ int main()
                     {
                         // Get the mouse position relative to the window
                         Vector2f mousePosition = static_cast<Vector2f>(Mouse::getPosition(window));
+
+                        if (!drawingArea.contains(mousePosition))
+                            break;
 
                         if (startVertexIndex == -1)
                         {
@@ -283,92 +323,6 @@ int main()
                                 {
                                     cout << "Vertex " << i + 1 << ": " << degrees[i] << endl;
                                 }
-
-                                // Generate and display the 2-isomorphism graphs
-                                vector<CircleShape> isomorphicVertices1(numVertices);
-                                vector<CircleShape> isomorphicVertices2(numVertices);
-                                float angleIncrement1 = 2 * 3.14159f / numVertices;
-                                float angleIncrement2 = 3 * 3.14159f / numVertices;
-                                float radius1 = 100.f;
-                                float radius2 = 200.f;
-                                Vector2f center1(300.f, 300.f);
-                                Vector2f center2(600.f, 300.f);
-
-                                for (int i = 0; i < numVertices; i++)
-                                {
-                                    CircleShape vertex1(10);
-                                    vertex1.setFillColor(Color::Green);
-                                    CircleShape vertex2(10);
-                                    vertex2.setFillColor(Color::Red);
-
-                                    float angle1 = i * angleIncrement1;
-                                    float angle2 = i * angleIncrement2;
-                                    Vector2f position1(center1.x + radius1 * cos(angle1), center1.y + radius1 * sin(angle1));
-                                    Vector2f position2(center2.x + radius2 * cos(angle2), center2.y + radius2 * sin(angle2));
-
-                                    vertex1.setPosition(position1);
-                                    isomorphicVertices1[i] = vertex1;
-
-                                    vertex2.setPosition(position2);
-                                    isomorphicVertices2[i] = vertex2;
-                                }
-
-                                RenderWindow isomorphicWindow1(VideoMode(800, 600), "2-Isomorphism Graph 1", Style::Titlebar | Style::Close);
-                                RenderWindow isomorphicWindow2(VideoMode(800, 600), "2-Isomorphism Graph 2", Style::Titlebar | Style::Close);
-
-                                while (isomorphicWindow1.isOpen() || isomorphicWindow2.isOpen())
-                                {
-                                    Event isomorphicEv1, isomorphicEv2;
-
-                                    while (isomorphicWindow1.pollEvent(isomorphicEv1))
-                                    {
-                                        if (isomorphicEv1.type == Event::Closed)
-                                            isomorphicWindow1.close();
-                                    }
-
-                                    while (isomorphicWindow2.pollEvent(isomorphicEv2))
-                                    {
-                                        if (isomorphicEv2.type == Event::Closed)
-                                            isomorphicWindow2.close();
-                                    }
-
-                                    isomorphicWindow1.clear(Color(0, 0, 0, 255));
-                                    isomorphicWindow2.clear(Color(0, 0, 0, 255));
-
-                                    // Draw the vertices of the isomorphic graphs
-                                    for (size_t i = 0; i < isomorphicVertices1.size(); i++)
-                                    {
-                                        isomorphicWindow1.draw(isomorphicVertices1[i]);
-                                        isomorphicWindow2.draw(isomorphicVertices2[i]);
-                                    }
-
-                                    // Draw the edges of the isomorphic graphs
-                                    for (int i = 0; i < numVertices; i++)
-                                    {
-                                        for (int j = i + 1; j < numVertices; j++)
-                                        {
-                                            if (adjacencyMatrix[i][j] > 0)
-                                            {
-                                                Vertex line1[] =
-                                                {
-                                                    Vertex(isomorphicVertices1[i].getPosition(), Color(50, 100, 150, 255)),
-                                                    Vertex(isomorphicVertices1[j].getPosition(), Color(50, 100, 150, 255))
-                                                };
-                                                Vertex line2[] =
-                                                {
-                                                    Vertex(isomorphicVertices2[i].getPosition(), Color(200, 150, 100, 255)),
-                                                    Vertex(isomorphicVertices2[j].getPosition(), Color(200, 150, 100, 255))
-                                                };
-
-                                                isomorphicWindow1.draw(line1, 2, Lines);
-                                                isomorphicWindow2.draw(line2, 2, Lines);
-                                            }
-                                        }
-                                    }
-
-                                    isomorphicWindow1.display();
-                                    isomorphicWindow2.display();
-                                }
                             }
                         }
                     }
@@ -382,6 +336,14 @@ int main()
         // Render
         window.clear(Color(0, 0, 0, 255)); // Clear old frame
 
+        // Draw the designated drawing area
+        RectangleShape drawingAreaShape(Vector2f(drawingArea.width, drawingArea.height));
+        drawingAreaShape.setPosition(drawingArea.left, drawingArea.top);
+        drawingAreaShape.setOutlineThickness(2.f);
+        drawingAreaShape.setOutlineColor(Color::White);
+        drawingAreaShape.setFillColor(Color(0, 0, 0, 0));
+        window.draw(drawingAreaShape);
+
         // Draw the vertices
         for (int i = 0; i < vertexCount; i++)
         {
@@ -390,6 +352,47 @@ int main()
 
         // Draw the edges
         window.draw(&edges[0], edgeCount * 2, Lines);
+
+        // Draw the isomorphic graph vertices and edges
+        for (size_t i = 0; i < isomorphicVertices1.size(); i++)
+        {
+            window.draw(isomorphicVertices1[i]);
+        }
+        for (int i = 0; i < numVertices; i++)
+        {
+            for (int j = i + 1; j < numVertices; j++)
+            {
+                if (adjacencyMatrix[i][j] > 0)
+                {
+                    Vertex line1[] =
+                    {
+                        Vertex(isomorphicVertices1[i].getPosition(), Color(50, 100, 150, 255)),
+                        Vertex(isomorphicVertices1[j].getPosition(), Color(50, 100, 150, 255))
+                    };
+                    window.draw(line1, 2, Lines);
+                }
+            }
+        }
+
+        for (size_t i = 0; i < isomorphicVertices2.size(); i++)
+        {
+            window.draw(isomorphicVertices2[i]);
+        }
+        for (int i = 0; i < numVertices; i++)
+        {
+            for (int j = i + 1; j < numVertices; j++)
+            {
+                if (adjacencyMatrix[i][j] > 0)
+                {
+                    Vertex line2[] =
+                    {
+                        Vertex(isomorphicVertices2[i].getPosition(), Color(200, 150, 100, 255)),
+                        Vertex(isomorphicVertices2[j].getPosition(), Color(200, 150, 100, 255))
+                    };
+                    window.draw(line2, 2, Lines);
+                }
+            }
+        }
 
         window.display(); // Tell app that window is done drawing
     }
