@@ -172,7 +172,8 @@ int main()
                     startVertexIndex = -1;
                     cout << "Edge Tool is Active" << endl;
                 }
-                else if (ev.key.code == Keyboard::Z && ev.key.control)
+                else if (ev.key.code == Keyboard::Z && ev.key.control){
+                if(edgeCount !=numEdges)
                 {
                     // Undo the previous modification
                     if (startVertexIndex == -1 && !prevEdgesStack.empty() && !prevEdgeCountStack.empty())
@@ -191,6 +192,8 @@ int main()
                     else if (edgeCount != 0)
                         cout << "Draw the edge first before undoing an edge.\n";
                 }
+                }
+
                 break;
 
             case Event::MouseButtonPressed:
