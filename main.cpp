@@ -124,6 +124,9 @@ int main()
         isomorphicVertices2[i] = vertex2;
     }
 
+    random_shuffle (isomorphicVertices1.begin(), isomorphicVertices1.end());
+    random_shuffle (isomorphicVertices2.begin(), isomorphicVertices2.end());
+
     // Game loop
     while (window.isOpen())
     {
