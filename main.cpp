@@ -94,26 +94,28 @@ int main()
     // Generate and display the 2-isomorphism graphs
     vector<CircleShape> isomorphicVertices1(numVertices);
     vector<CircleShape> isomorphicVertices2(numVertices);
-    float angleIncrement1 = 2 * 3.14159f / numVertices;
-    float angleIncrement2 = 3 * 3.14159f / numVertices;
-    float radius1 = 150.f;
-    float radius2 = 150.f;
+    float angleIncrement1 = 6.28318f / numVertices;
+    float angleIncrement2 = 6.28318f / numVertices;
+    float radius1 = 100.f;
+    float radius2 = 100.f;
 
     // Calculate centers for the isomorphic graphs
     Vector2f center1(isomorphicArea.left + isomorphicArea.width / 4.f, isomorphicArea.top + isomorphicArea.height / 2.f);
     Vector2f center2(isomorphicArea.left + isomorphicArea.width * 3.f / 4.f, isomorphicArea.top + isomorphicArea.height / 2.f);
 
+    srand(time(0));
+
     for (int i = 0; i < numVertices; i++)
     {
-        CircleShape vertex1(10);
+        CircleShape vertex1(5);
         vertex1.setFillColor(Color::Green);
-        CircleShape vertex2(10);
+        CircleShape vertex2(5);
         vertex2.setFillColor(Color::Red);
 
         float angle1 = i * angleIncrement1;
         float angle2 = i * angleIncrement2;
         Vector2f position1(center1.x + radius1 * cos(angle1), center1.y + radius1 * sin(angle1));
-        Vector2f position2(center2.x + radius2 * cos(angle2), center2.y + radius2 * sin(angle2));
+        Vector2f position2(center2.x + (radius2 - (-40 + (rand() % 101))) * cos(angle2), center2.y + (radius2 - (-40 + (rand() % 101))) * sin(angle2));
 
         vertex1.setPosition(position1);
         isomorphicVertices1[i] = vertex1;
@@ -128,35 +130,6 @@ int main()
         // Event polling
         while (window.pollEvent(ev))
         {
-            // Vertex lights up when the mouse cursor hovers over it
-            if (ev.type == Event::MouseMoved && edgeToolActive && vertexCount > 0)
-            {
-                // Get the mouse position relative to the window
-                Vector2f mousePosition = static_cast<Vector2f>(Mouse::getPosition(window));
-
-                // Find the closest vertex to the mouse position
-                float closestDistance = 18;
-                for (int i = 0; i < vertexCount; i++)
-                {
-                    float distance = calculateDistance(mousePosition, vertices[i].getPosition());
-                    if (distance < closestDistance)
-                    {
-                        vertices[i].setFillColor(Color::Yellow);
-                    }
-                    else
-                    {
-                        vertices[i].setFillColor(Color::White);
-                    }
-                }
-            }
-            else
-            {
-                for (int i = 0; i < vertexCount; i++)
-                {
-                    vertices[i].setFillColor(Color::White);
-                }
-            }
-            
             switch (ev.type)
             {
             case Event::Closed:
@@ -183,7 +156,7 @@ int main()
                 else if (ev.key.code == Keyboard::Z && ev.key.control)
                 {
                     // Undo the previous modification
-                    if (!prevEdgesStack.empty() && !prevEdgeCountStack.empty())
+                    if (startVertexIndex == -1 && !prevEdgesStack.empty() && !prevEdgeCountStack.empty())
                     {
                         // Restore the previous state
                         edges = prevEdgesStack.top();
@@ -192,7 +165,11 @@ int main()
                         // Pop the previous state from the stacks
                         prevEdgesStack.pop();
                         prevEdgeCountStack.pop();
+
+                        cout << "Edge undone.\n";
                     }
+                    else if (edgeCount != 0)
+                        cout << "Draw the edge first before undoing an edge.\n";
                 }
                 break;
 
@@ -229,6 +206,8 @@ int main()
 
                         if (startVertexIndex == -1)
                         {
+                            cout << "Edge drawing tool enabled.\n";
+
                             // Find the closest vertex to the mouse position
                             float closestDistance = 18;
                             for (int i = 0; i < vertexCount; i++)
@@ -281,6 +260,8 @@ int main()
 
                                 // Reset the start vertex index
                                 startVertexIndex = -1;
+
+                                cout << "Edge drawing tool disabled.\n";
                             }
 
                             if (edgeCount == numEdges)
@@ -349,7 +330,35 @@ int main()
         }
 
         // Update
-        
+        // Vertex lights up when the mouse cursor hovers over it
+            if (edgeToolActive && vertexCount > 0)
+            {
+                // Get the mouse position relative to the window
+                Vector2f mousePosition = static_cast<Vector2f>(Mouse::getPosition(window));
+
+                // Find the closest vertex to the mouse position
+                float closestDistance = 18;
+                for (int i = 0; i < vertexCount; i++)
+                {
+                    float distance = calculateDistance(mousePosition, vertices[i].getPosition());
+                    if (distance < closestDistance)
+                    {
+                        vertices[i].setFillColor(Color::Yellow);
+                    }
+                    else
+                    {
+                        vertices[i].setFillColor(Color::White);
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < vertexCount; i++)
+                {
+                    vertices[i].setFillColor(Color::White);
+                }
+            }
+
         // Render
         window.clear(Color(0, 0, 0, 255)); // Clear old frame
 
