@@ -1,5 +1,6 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include <cmath>
 #include <vector>
 #include <stack>
@@ -43,6 +44,20 @@ int main()
     // Ask the user for the number of vertices and edges
     string numVert, numEdg;
     int numVertices, numEdges;
+
+    //Sound Effects
+    sf::SoundBuffer popSound, undSound, lineSound; //load file
+    popSound.loadFromFile("src/sfx/pop.wav");
+    undSound.loadFromFile("src/sfx/undo.wav");
+    lineSound.loadFromFile("src/sfx/line.wav");
+
+    sf::Sound pop, und, line;
+    pop.setBuffer(popSound);
+    und.setBuffer(undSound);
+    line.setBuffer(lineSound);
+
+    
+
 
     while (true)
     {
@@ -148,6 +163,7 @@ int main()
                     edgeToolActive = false;
                     startVertexIndex = -1;
                     cout << "Vertex Tool is Active" << endl;
+
                 }
                 else if (ev.key.code == Keyboard::G)
                 {
@@ -169,6 +185,7 @@ int main()
                         prevEdgesStack.pop();
                         prevEdgeCountStack.pop();
 
+                        und.play();
                         cout << "Edge undone.\n";
                     }
                     else if (edgeCount != 0)
@@ -182,6 +199,7 @@ int main()
                     if (vertexToolActive && vertexCount < numVertices)
                     {
                         // Get the mouse position relative to the window
+                        pop.play();
                         Vector2f mousePosition = static_cast<Vector2f>(Mouse::getPosition(window));
 
                         // Check if the mouse is within the designated drawing area
@@ -241,6 +259,7 @@ int main()
 
                             if (endVertexIndex != -1)
                             {
+                                line.play();
                                 Vector2f startPoint = getCenter(vertices[startVertexIndex]);
                                 Vector2f endPoint = getCenter(vertices[endVertexIndex]);
 
