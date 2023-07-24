@@ -318,7 +318,7 @@ int main()
                                 }
 
                                 // Output the adjacency matrix
-                                cout << "\nAdjacency Matrix:" << endl;
+                                cout << "\nAdjacency Matrix of Drawn Graph:" << endl;
 
                                 for (int i = 0; i < numVertices; i++)
                                 {
@@ -340,8 +340,66 @@ int main()
                                 }
 
                                 // Output the degree of each vertex
-                                cout << "\nDegree of the Graph:" << endl;
+                                cout << "\nDegree of the Graph of Drawn Graph:" << endl;
 
+                                for (int i = 0; i < numVertices; i++)
+                                {
+                                    cout << "Vertex " << i + 1 << ": " << degrees[i] << endl;
+                                }
+
+                                // Output the adjacency matrix for the isomorphic graph 1
+                                cout << "\nAdjacency Matrix for Generated Graph 1:" << endl;
+                                for (int i = 0; i < numVertices; i++)
+                                {
+                                    for (int j = 0; j < numVertices; j++)
+                                    {
+                                        int isomorphicValue = adjacencyMatrix[i][j] > 0 ? 1 : 0;
+                                        cout << isomorphicValue << " ";
+                                    }
+                                    cout << endl;
+                                }
+
+                                for (int i = 0; i < numVertices; i++)
+                                {
+                                    int degree = 0;
+                                    for (int j = 0; j < numVertices; j++)
+                                    {
+                                        degree += adjacencyMatrix[i][j] > 0 ? 1 : 0;
+                                    }
+                                    degrees[i] = degree;
+                                }
+
+                                // Output the degree of each vertex for the isomorphic graph 1
+                                cout << "\nDegree of the Generated Graph 1:" << endl;
+                                for (int i = 0; i < numVertices; i++)
+                                {
+                                    cout << "Vertex " << i + 1 << ": " << degrees[i] << endl;
+                                }
+
+                                // Output the adjacency matrix for the isomorphic graph 2
+                                cout << "\nAdjacency Matrix for Generated Graph 2:" << endl;
+                                for (int i = 0; i < numVertices; i++)
+                                {
+                                    for (int j = 0; j < numVertices; j++)
+                                    {
+                                        int isomorphicValue = adjacencyMatrix[i][j] > 0 ? 1 : 0;
+                                        cout << isomorphicValue << " ";
+                                    }
+                                    cout << endl;
+                                }
+
+                                for (int i = 0; i < numVertices; i++)
+                                {
+                                    int degree = 0;
+                                    for (int j = 0; j < numVertices; j++)
+                                    {
+                                        degree += adjacencyMatrix[i][j] > 0 ? 1 : 0;
+                                    }
+                                    degrees[i] = degree;
+                                }
+
+                                // Output the degree of each vertex for the isomorphic graph 2
+                                cout << "\nDegree of the Generated Graph 2:" << endl;
                                 for (int i = 0; i < numVertices; i++)
                                 {
                                     cout << "Vertex " << i + 1 << ": " << degrees[i] << endl;
