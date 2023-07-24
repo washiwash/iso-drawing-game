@@ -32,6 +32,19 @@ bool isInteger (string input)
     return true;
 }
 
+Vector2f calculateBezierPoint(Vector2f p0, Vector2f p1, Vector2f p2, float t)
+{
+    float u = 1.0f - t;
+    float tt = t * t;
+    float uu = u * u;
+
+    Vector2f point = uu * p0; // (1-t)^2 * P0
+    point += 2.0f * u * t * p1;  // 2 * (1-t) * t * P1
+    point += tt * p2;            // t^2 * P2
+
+    return point;
+}
+
 int main()
 {
     RenderWindow window(VideoMode(1200, 600), "Isomorphic Graph Generator", Style::Titlebar | Style::Close);
@@ -91,13 +104,15 @@ int main()
         }
     }
 
-    // Create a vector to store the vertices and edges
     vector<CircleShape> vertices(numVertices);
     vector<Vertex> edges(numEdges * 2);
     stack<vector<Vertex>> prevEdgesStack;
     stack<int> prevEdgeCountStack;
     int vertexCount = 0;
     int edgeCount = 0;
+
+    //Duplicate edges and looped edges
+    VertexArray curveLine(LineStrip);
 
     bool vertexToolActive = false;
     bool edgeToolActive = false;
@@ -173,25 +188,25 @@ int main()
                     cout << "Edge Tool is Active" << endl;
                 }
                 else if (ev.key.code == Keyboard::Z && ev.key.control){
-                if(edgeCount !=numEdges)
-                {
-                    // Undo the previous modification
-                    if (startVertexIndex == -1 && !prevEdgesStack.empty() && !prevEdgeCountStack.empty())
+                    if(edgeCount !=numEdges)
                     {
-                        // Restore the previous state
-                        edges = prevEdgesStack.top();
-                        edgeCount = prevEdgeCountStack.top();
+                        // Undo the previous modification
+                        if (startVertexIndex == -1 && !prevEdgesStack.empty() && !prevEdgeCountStack.empty())
+                        {
+                            // Restore the previous state
+                            edges = prevEdgesStack.top();
+                            edgeCount = prevEdgeCountStack.top();
 
-                        // Pop the previous state from the stacks
-                        prevEdgesStack.pop();
-                        prevEdgeCountStack.pop();
+                            // Pop the previous state from the stacks
+                            prevEdgesStack.pop();
+                            prevEdgeCountStack.pop();
 
-                        und.play();
-                        cout << "Edge undone.\n";
+                            und.play();
+                            cout << "Edge undone.\n";
+                        }
+                        else if (edgeCount != 0)
+                            cout << "Draw the edge first before undoing an edge.\n";
                     }
-                    else if (edgeCount != 0)
-                        cout << "Draw the edge first before undoing an edge.\n";
-                }
                 }
 
                 break;
@@ -263,33 +278,82 @@ int main()
                             if (endVertexIndex != -1)
                             {
                                 line.play();
+
                                 Vector2f startPoint = getCenter(vertices[startVertexIndex]);
                                 Vector2f endPoint = getCenter(vertices[endVertexIndex]);
 
-                                Vertex line[] =
+                                // Check if an edge already exists between the two selected vertices
+                                bool isExistingEdge = false;
+                                for (int i = 0; i < edgeCount; i++)
                                 {
-                                    Vertex(startPoint, Color(50, 100, 150, 255)),
-                                    Vertex(endPoint, Color(200, 150, 100, 255))
-                                };
+                                    Vector2f existingStartPoint = edges[i * 2].position;
+                                    Vector2f existingEndPoint = edges[i * 2 + 1].position;
+                                    if ((existingStartPoint == startPoint && existingEndPoint == endPoint) ||
+                                        (existingStartPoint == endPoint && existingEndPoint == startPoint))
+                                    {
+                                        isExistingEdge = true;
+                                        break;
+                                    }
+                                }
 
-                                // Save the previous state before modifying edges
-                                prevEdgesStack.push(edges);
-                                prevEdgeCountStack.push(edgeCount);
+                                if (isExistingEdge)
+                                {
+                                    // Draw a curved edge using a quadratic Bezier curve
+                                    Vector2f controlPoint;
+                                    controlPoint.x = startPoint.x;
+                                    controlPoint.y = endPoint.y;
 
-                                // Add the line vertices to the vector
-                                edges[edgeCount * 2] = line[0];
-                                edges[edgeCount * 2 + 1] = line[1];
+                                    // Save the previous state before modifying edges
+                                    prevEdgesStack.push(edges);
+                                    prevEdgeCountStack.push(edgeCount);
 
-                                // Increment the edge count
-                                edgeCount++;
+                                    // Add the line vertices to the vector
+                                    edges[edgeCount * 2] = startPoint;
+                                    edges[edgeCount * 2 + 1] = endPoint;
 
-                                // Reset the start vertex index
-                                startVertexIndex = -1;
+                                    for (float t = 0; t <= 1.0; t += 0.05)
+                                    {
+                                        Vector2f point = calculateBezierPoint(startPoint, controlPoint, endPoint, t);
+                                        curveLine.append(Vertex(point, Color::White));
+                                    }
 
-                                cout << "Edge drawing tool disabled.\n";
+                                    // Increment the edge count
+                                    edgeCount++;
+
+                                    // Reset the start vertex index
+                                    startVertexIndex = -1;
+
+                                    cout << "Curved edge drawing tool disabled.\n";
+                                    }
+                                    else
+                                    {
+                                        // Draw a straight edge between the two selected vertices
+                                        Vertex line[] =
+                                        {
+                                            Vertex(startPoint, Color(50, 100, 150, 255)),
+                                            Vertex(endPoint, Color(200, 150, 100, 255))
+                                        };
+
+                                        // Save the previous state before modifying edges
+                                        prevEdgesStack.push(edges);
+                                        prevEdgeCountStack.push(edgeCount);
+
+                                        // Add the line vertices to the vector
+                                        edges[edgeCount * 2] = line[0];
+                                        edges[edgeCount * 2 + 1] = line[1];
+
+                                        // Increment the edge count
+                                        edgeCount++;
+
+                                        // Reset the start vertex index
+                                        startVertexIndex = -1;
+
+                                        cout << "Edge drawing tool disabled.\n";
+                                    }
+                                }             
                             }
 
-                            if (edgeCount == numEdges)
+                            if (edgeCount == numEdges && vertexCount == numVertices)
                             {
                                 for (int i = 0; i < edgeCount; i++)
                                 {
@@ -410,37 +474,36 @@ int main()
                 }
                 break;
             }
-        }
-
+     
         // Update
         // Vertex lights up when the mouse cursor hovers over it
-            if (edgeToolActive && vertexCount > 0)
-            {
-                // Get the mouse position relative to the window
-                Vector2f mousePosition = static_cast<Vector2f>(Mouse::getPosition(window));
+        if (edgeToolActive && vertexCount > 0)
+        {
+            // Get the mouse position relative to the window
+            Vector2f mousePosition = static_cast<Vector2f>(Mouse::getPosition(window));
 
-                // Find the closest vertex to the mouse position
-                float closestDistance = 18;
-                for (int i = 0; i < vertexCount; i++)
-                {
-                    float distance = calculateDistance(mousePosition, vertices[i].getPosition());
-                    if (distance < closestDistance)
-                    {
-                        vertices[i].setFillColor(Color::Yellow);
-                    }
-                    else
-                    {
-                        vertices[i].setFillColor(Color::White);
-                    }
-                }
-            }
-            else
+            // Find the closest vertex to the mouse position
+            float closestDistance = 18;
+            for (int i = 0; i < vertexCount; i++)
             {
-                for (int i = 0; i < vertexCount; i++)
+                float distance = calculateDistance(mousePosition, vertices[i].getPosition());
+                if (distance < closestDistance)
+                {
+                    vertices[i].setFillColor(Color::Yellow);
+                }
+                else
                 {
                     vertices[i].setFillColor(Color::White);
                 }
             }
+        }
+        else
+        {
+            for (int i = 0; i < vertexCount; i++)
+            {
+                vertices[i].setFillColor(Color::White);
+            }
+        }
 
         // Render
         window.clear(Color(0, 0, 0, 255)); // Clear old frame
@@ -461,6 +524,7 @@ int main()
 
         // Draw the edges
         window.draw(&edges[0], edgeCount * 2, Lines);
+        window.draw(curveLine);
 
         // Draw the isomorphic graph vertices and edges
         for (size_t i = 0; i < isomorphicVertices1.size(); i++)
@@ -510,8 +574,8 @@ int main()
         }
 
         window.display(); // Tell app that window is done drawing
-    }
-
+        }
+    
     // End of app
     return 0;
 }
