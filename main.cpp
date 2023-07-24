@@ -46,12 +46,12 @@ int main()
     int numVertices, numEdges;
 
     //Sound Effects
-    sf::SoundBuffer popSound, undSound, lineSound; //load file
+    SoundBuffer popSound, undSound, lineSound; //load file
     popSound.loadFromFile("src/sfx/pop.wav");
     undSound.loadFromFile("src/sfx/undo.wav");
     lineSound.loadFromFile("src/sfx/line.wav");
 
-    sf::Sound pop, und, line;
+    Sound pop, und, line;
     pop.setBuffer(popSound);
     und.setBuffer(undSound);
     line.setBuffer(lineSound);
