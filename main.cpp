@@ -22,7 +22,7 @@ Vector2f getCenter(const CircleShape& shape)
     return Vector2f(position.x + radius, position.y + radius);
 }
 
-bool isInteger (string input)
+bool isInteger(string input)
 {
     for (int i = 0; i < input.size(); i++)
     {
@@ -34,9 +34,6 @@ bool isInteger (string input)
 
 int main()
 {
-    RenderWindow window(VideoMode(1200, 600), "Isomorphic Graph Generator", Style::Titlebar | Style::Close);
-    Event ev;
-
     // Define the designated area for drawing
     FloatRect drawingArea(0.f, 0.f, 400.f, 600.f);
     FloatRect isomorphicArea(400.f, 0.f, 800.f, 600.f);
@@ -55,6 +52,32 @@ int main()
     pop.setBuffer(popSound);
     und.setBuffer(undSound);
     line.setBuffer(lineSound);
+
+    // Starting Screen
+    RenderWindow startingWindow(sf::VideoMode(1200, 600), "Starting Screen", sf::Style::Titlebar | sf::Style::Close);
+    startingWindow.setFramerateLimit(60);
+
+    sf::Font font;
+    if (!font.loadFromFile("src/font/Roboto-Bold.ttf"))
+    {
+        std::cerr << "Failed to load font.\n";
+        return 1;
+    }
+
+    Text titleText("Isomorphic Graph Generator", font, 48);
+    titleText.setFillColor(sf::Color::White);
+    titleText.setPosition(300.f, 100.f);
+
+    Text playText("1. Play", font, 30);
+    playText.setFillColor(sf::Color::White);
+    playText.setPosition(550.f, 250.f);
+
+
+    sf::Text quitText("2. Quit", font, 30);
+    quitText.setFillColor(sf::Color::White);
+    quitText.setPosition(550.f, 300.f);
+
+    int selectedOption = 1;
 
     while (true)
     {
@@ -143,10 +166,66 @@ int main()
         isomorphicVertices2[i] = vertex2;
     }
 
-    random_shuffle (isomorphicVertices1.begin(), isomorphicVertices1.end());
-    random_shuffle (isomorphicVertices2.begin(), isomorphicVertices2.end());
+    random_shuffle(isomorphicVertices1.begin(), isomorphicVertices1.end());
+    random_shuffle(isomorphicVertices2.begin(), isomorphicVertices2.end());
 
     // Game loop
+    while (startingWindow.isOpen())
+    {
+        sf::Event event;
+        while (startingWindow.pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed)
+                startingWindow.close();
+            else if (event.type == sf::Event::KeyPressed)
+            {
+                if (event.key.code == sf::Keyboard::Num1)
+                    selectedOption = 1;
+                else if (event.key.code == sf::Keyboard::Num2)
+                    selectedOption = 2;
+                else if (event.key.code == sf::Keyboard::Enter)
+                {
+                    switch (selectedOption)
+                    {
+                    case 1:
+                        // Start the game...
+                        startingWindow.close();
+                        break;
+                    case 2:
+                        startingWindow.close();
+                        return 0;
+                    }
+                }
+            }
+        }
+
+        switch (selectedOption)
+        {
+        case 1:
+            playText.setFillColor(sf::Color::Yellow);
+            quitText.setFillColor(sf::Color::White);
+            break;
+        
+        case 2:
+            playText.setFillColor(sf::Color::White);
+            quitText.setFillColor(sf::Color::Yellow);
+            break;
+        }
+
+        // Display the starting screen
+        startingWindow.clear();
+        startingWindow.draw(titleText);
+        startingWindow.draw(playText);
+        startingWindow.draw(quitText);
+        startingWindow.display();
+    }
+
+    // Main Game Window
+    RenderWindow window(VideoMode(1200, 600), "Isomorphic Graph Generator", Style::Titlebar | Style::Close);
+    Event ev;
+
+   
+
     while (window.isOpen())
     {
         // Event polling
