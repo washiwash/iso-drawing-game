@@ -56,9 +56,6 @@ int main()
     und.setBuffer(undSound);
     line.setBuffer(lineSound);
 
-    
-
-
     while (true)
     {
         cout << "Enter the number of vertices: ";
@@ -105,6 +102,15 @@ int main()
 
     vector<vector<int>> adjacencyMatrix(numVertices, vector<int>(numVertices, 0));
     vector<int> degrees(numVertices, 0);
+
+    // Create a vector to store updated degrees of vertices
+    vector<int> updatingDegree(numEdges, 0);
+    vector<int> degreeIndex(numEdges);
+    stack<vector<int>> prevDegreeIndexStack;
+
+    Vector2f startPoint, endPoint;
+    vector<string> isLoopOrLine(numEdges);
+    stack<vector<string>> prevIsLoopOrLineStack;
 
     // Generate and display the 2-isomorphism graphs
     vector<CircleShape> isomorphicVertices1(numVertices);
@@ -173,25 +179,31 @@ int main()
                     cout << "Edge Tool is Active" << endl;
                 }
                 else if (ev.key.code == Keyboard::Z && ev.key.control){
-                if(edgeCount !=numEdges)
-                {
-                    // Undo the previous modification
-                    if (startVertexIndex == -1 && !prevEdgesStack.empty() && !prevEdgeCountStack.empty())
+                if(edgeCount !=numEdges && edgeCount != 0)
                     {
-                        // Restore the previous state
-                        edges = prevEdgesStack.top();
-                        edgeCount = prevEdgeCountStack.top();
+                        // Undo the previous modification
+                        if (startVertexIndex == -1 && !prevEdgesStack.empty() && !prevEdgeCountStack.empty() && !prevIsLoopOrLineStack.empty() && !prevDegreeIndexStack.empty())
+                        {
+                            // Restore the previous state of edges
+                            edges = prevEdgesStack.top();
+                            edgeCount = prevEdgeCountStack.top();    
+                            isLoopOrLine = prevIsLoopOrLineStack.top();           
+                            degreeIndex = prevDegreeIndexStack.top();
 
-                        // Pop the previous state from the stacks
-                        prevEdgesStack.pop();
-                        prevEdgeCountStack.pop();
+                            // Pop the previous state from the stacks
+                            prevEdgesStack.pop();
+                            prevEdgeCountStack.pop();
+                            prevIsLoopOrLineStack.pop();
+                            prevDegreeIndexStack.pop();
 
-                        und.play();
-                        cout << "Edge undone.\n";
+                            updatingDegree[degreeIndex[edgeCount]] -= 1;
+
+                            und.play();
+                            cout << "Edge undone.\n";
+                        }
+                        else if (edgeCount != 0)
+                            cout << "Draw the edge first before undoing an edge.\n";
                     }
-                    else if (edgeCount != 0)
-                        cout << "Draw the edge first before undoing an edge.\n";
-                }
                 }
 
                 break;
@@ -263,26 +275,40 @@ int main()
                             if (endVertexIndex != -1)
                             {
                                 line.play();
-                                Vector2f startPoint = getCenter(vertices[startVertexIndex]);
-                                Vector2f endPoint = getCenter(vertices[endVertexIndex]);
+                                startPoint = getCenter(vertices[startVertexIndex]);
+                                endPoint = getCenter(vertices[endVertexIndex]);
 
-                                Vertex line[] =
-                                {
-                                    Vertex(startPoint, Color(50, 100, 150, 255)),
-                                    Vertex(endPoint, Color(200, 150, 100, 255))
-                                };
+                                prevIsLoopOrLineStack.push(isLoopOrLine);
+                                if (startPoint == endPoint)                                
+                                    isLoopOrLine[edgeCount] = "Loop";
+                                else
+                                    isLoopOrLine[edgeCount] = "Line";
 
                                 // Save the previous state before modifying edges
                                 prevEdgesStack.push(edges);
                                 prevEdgeCountStack.push(edgeCount);
 
                                 // Add the line vertices to the vector
-                                edges[edgeCount * 2] = line[0];
-                                edges[edgeCount * 2 + 1] = line[1];
+                                edges[edgeCount * 2] = startPoint;
+                                edges[edgeCount * 2 + 1] = endPoint;
 
                                 // Increment the edge count
                                 edgeCount++;
 
+                                for (int i = 0; i < edgeCount; i++)
+                                {
+                                    Vector2f existingStartPoint = edges[i * 2].position;
+                                    Vector2f existingEndPoint = edges[i * 2 + 1].position;
+                                    if ((existingStartPoint == startPoint && existingEndPoint == endPoint) ||
+                                        (existingStartPoint == endPoint && existingEndPoint == startPoint))
+                                    {
+                                        updatingDegree[i] += 1;
+                                        prevDegreeIndexStack.push(degreeIndex);
+                                        degreeIndex[edgeCount] = i;
+                                        cout << "Updated degree [" << i << "] : " << updatingDegree[i] << endl;
+                                        break;
+                                    }
+                                }
                                 // Reset the start vertex index
                                 startVertexIndex = -1;
 
@@ -460,7 +486,13 @@ int main()
         }
 
         // Draw the edges
-        window.draw(&edges[0], edgeCount * 2, Lines);
+        for (int i = 0; i < edgeCount; i++)
+        {
+            Vertex line[] = {edges[i * 2], edges[i * 2 + 1]};
+            
+            window.draw(line, 2, Lines);
+            
+        }
 
         // Draw the isomorphic graph vertices and edges
         for (size_t i = 0; i < isomorphicVertices1.size(); i++)
