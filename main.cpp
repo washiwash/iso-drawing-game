@@ -179,33 +179,32 @@ int main()
                     cout << "Edge Tool is Active" << endl;
                 }
                 else if (ev.key.code == Keyboard::Z && ev.key.control){
-                if(edgeCount !=numEdges && edgeCount != 0)
-                    {
-                        // Undo the previous modification
-                        if (startVertexIndex == -1 && !prevEdgesStack.empty() && !prevEdgeCountStack.empty() && !prevIsLoopOrLineStack.empty() && !prevDegreeIndexStack.empty())
+                    if(edgeCount != numEdges)
                         {
-                            // Restore the previous state of edges
-                            edges = prevEdgesStack.top();
-                            edgeCount = prevEdgeCountStack.top();    
-                            isLoopOrLine = prevIsLoopOrLineStack.top();           
-                            degreeIndex = prevDegreeIndexStack.top();
+                            // Undo the previous modification
+                            if (startVertexIndex == -1 && !prevEdgesStack.empty() && !prevEdgeCountStack.empty() && !prevIsLoopOrLineStack.empty() && !prevDegreeIndexStack.empty())
+                            {
+                                updatingDegree[degreeIndex[edgeCount]] -= 1;
 
-                            // Pop the previous state from the stacks
-                            prevEdgesStack.pop();
-                            prevEdgeCountStack.pop();
-                            prevIsLoopOrLineStack.pop();
-                            prevDegreeIndexStack.pop();
+                                // Restore the previous state of edges
+                                edges = prevEdgesStack.top();
+                                edgeCount = prevEdgeCountStack.top();    
+                                isLoopOrLine = prevIsLoopOrLineStack.top();           
+                                degreeIndex = prevDegreeIndexStack.top();
 
-                            updatingDegree[degreeIndex[edgeCount]] -= 1;
+                                // Pop the previous state from the stacks
+                                prevEdgesStack.pop();
+                                prevEdgeCountStack.pop();
+                                prevIsLoopOrLineStack.pop();
+                                prevDegreeIndexStack.pop();
 
-                            und.play();
-                            cout << "Edge undone.\n";
+                                und.play();
+                                cout << "Edge undone.\n";
+                            }
+                            else if (edgeCount != 0)
+                                cout << "Draw the edge first before undoing an edge.\n";
                         }
-                        else if (edgeCount != 0)
-                            cout << "Draw the edge first before undoing an edge.\n";
                     }
-                }
-
                 break;
 
             case Event::MouseButtonPressed:
@@ -284,6 +283,8 @@ int main()
                                 else
                                     isLoopOrLine[edgeCount] = "Line";
 
+                                cout << isLoopOrLine[edgeCount] << endl;
+
                                 // Save the previous state before modifying edges
                                 prevEdgesStack.push(edges);
                                 prevEdgeCountStack.push(edgeCount);
@@ -309,6 +310,7 @@ int main()
                                         break;
                                     }
                                 }
+                                
                                 // Reset the start vertex index
                                 startVertexIndex = -1;
 
@@ -489,9 +491,24 @@ int main()
         for (int i = 0; i < edgeCount; i++)
         {
             Vertex line[] = {edges[i * 2], edges[i * 2 + 1]};
-            
-            window.draw(line, 2, Lines);
-            
+
+            for (int i = 0; i < edgeCount; i++)
+            {
+                if (isLoopOrLine[i] == "Loop")
+                {
+                    CircleShape loop;
+                }  
+
+                if (isLoopOrLine[i] == "Line")
+                {
+                    if (updatingDegree[i] % 2 == 0)
+                    {
+                        
+                    }
+                    else    
+                        window.draw(line, 2, Lines);
+                }
+            }         
         }
 
         // Draw the isomorphic graph vertices and edges
