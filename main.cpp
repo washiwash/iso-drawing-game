@@ -103,12 +103,10 @@ int main()
     vector<vector<int>> adjacencyMatrix(numVertices, vector<int>(numVertices, 0));
     vector<int> degrees(numVertices, 0);
 
-    // Create a vector to store updated degrees of vertices
+    // Create a vector to store updated degrees of vertices and type of edge
     vector<int> updatingDegree(numEdges, 0);
     vector<int> degreeIndex(numEdges);
     stack<vector<int>> prevDegreeIndexStack;
-
-    Vector2f startPoint, endPoint;
     vector<string> isLoopOrLine(numEdges);
     stack<vector<string>> prevIsLoopOrLineStack;
 
@@ -274,8 +272,8 @@ int main()
                             if (endVertexIndex != -1)
                             {
                                 line.play();
-                                startPoint = getCenter(vertices[startVertexIndex]);
-                                endPoint = getCenter(vertices[endVertexIndex]);
+                                Vector2f startPoint = getCenter(vertices[startVertexIndex]);
+                                Vector2f endPoint = getCenter(vertices[endVertexIndex]);
 
                                 prevIsLoopOrLineStack.push(isLoopOrLine);
                                 if (startPoint == endPoint)                                
@@ -492,23 +490,19 @@ int main()
         {
             Vertex line[] = {edges[i * 2], edges[i * 2 + 1]};
 
-            for (int i = 0; i < edgeCount; i++)
+            if (isLoopOrLine[i] == "Loop")
             {
-                if (isLoopOrLine[i] == "Loop")
-                {
-                    CircleShape loop;
-                }  
 
-                if (isLoopOrLine[i] == "Line")
+            }  
+            if (isLoopOrLine[i] == "Line")
+            {
+                if (updatingDegree[i] % 2 == 0)
                 {
-                    if (updatingDegree[i] % 2 == 0)
-                    {
-                        
-                    }
-                    else    
-                        window.draw(line, 2, Lines);
+
                 }
-            }         
+                else
+                    window.draw(line, 2, Lines);
+            }
         }
 
         // Draw the isomorphic graph vertices and edges
