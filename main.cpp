@@ -32,6 +32,19 @@ bool isInteger(string input)
     return true;
 }
 
+Vector2f calculateBezierPoint(Vector2f p0, Vector2f p1, Vector2f p2, float t)
+{
+    float u = 1.0f - t;
+    float tt = t * t;
+    float uu = u * u;
+
+    Vector2f point = uu * p0; // (1-t)^2 * P0
+    point += 2.0f * u * t * p1;  // 2 * (1-t) * t * P1
+    point += tt * p2;            // t^2 * P2
+
+    return point;
+}
+
 int main()
 {
     // Define the designated area for drawing
@@ -118,6 +131,9 @@ int main()
     stack<int> prevEdgeCountStack;
     int vertexCount = 0;
     int edgeCount = 0;
+
+    //Duplicate edges and looped edges
+    VertexArray curveLine(LineStrip);
 
     bool vertexToolActive = false;
     bool edgeToolActive = false;
@@ -357,6 +373,57 @@ int main()
                                 Vector2f startPoint = getCenter(vertices[startVertexIndex]);
                                 Vector2f endPoint = getCenter(vertices[endVertexIndex]);
 
+                                // Check if an edge already exists between the two selected vertices
+                                bool isExistingEdge = false;
+                                for (int i = 0; i < edgeCount; i++)
+                                {
+                                    Vector2f existingStartPoint = edges[i * 2].position;
+                                    Vector2f existingEndPoint = edges[i * 2 + 1].position;
+                                    if ((existingStartPoint == startPoint && existingEndPoint == endPoint) ||
+                                        (existingStartPoint == endPoint && existingEndPoint == startPoint))
+                                    {
+                                        isExistingEdge = true;
+                                        break;
+                                    }
+                                }
+
+                                if (isExistingEdge)
+                                {
+                                    // Draw a curved edge using a quadratic Bezier curve
+                                    Vector2f controlPoint;
+                                    controlPoint.x = startPoint.x;
+                                    controlPoint.y = endPoint.y;
+
+                                    // Save the previous state before modifying edges
+                                    prevEdgesStack.push(edges);
+                                    prevEdgeCountStack.push(edgeCount);
+
+                                    // Add the line vertices to the vector
+                                    edges[edgeCount * 2] = startPoint;
+                                    edges[edgeCount * 2 + 1] = endPoint;
+
+                                    for (float t = 0; t <= 1.0; t += 0.05)
+                                    {
+                                        Vector2f point = calculateBezierPoint(startPoint, controlPoint, endPoint, t);
+                                        curveLine.append(Vertex(point, Color::White));
+                                    }
+
+                                    // Increment the edge count
+                                    edgeCount++;
+
+                                    // Reset the start vertex index
+                                    startVertexIndex = -1;
+
+                                    cout << "Curved edge drawing tool disabled.\n";
+                                    }
+                                    else
+                                    {
+                                        // Draw a straight edge between the two selected vertices
+                                        Vertex line[] ={
+                                            Vertex(startPoint, Color(50, 100, 150, 255)),
+                                            Vertex(endPoint, Color(200, 150, 100, 255))
+                                        };
+
                                 prevIsLoopOrLineStack.push(isLoopOrLine);
                                 if (startPoint == endPoint)                                
                                     isLoopOrLine[edgeCount] = "Loop";
@@ -395,9 +462,10 @@ int main()
                                 startVertexIndex = -1;
 
                                 cout << "Edge drawing tool disabled.\n";
-                            }
+                                }
+                            }             
 
-                            if (edgeCount == numEdges)
+                            if (edgeCount == numEdges && vertexCount == numVertices)
                             {
                                 for (int i = 0; i < edgeCount; i++)
                                 {
@@ -568,6 +636,9 @@ int main()
         }
 
         // Draw the edges
+        
+        window.draw(curveLine);
+
         for (int i = 0; i < edgeCount; i++)
             {
                 Vector2f startPoint = edges[i * 2].position;
