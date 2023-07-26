@@ -123,6 +123,9 @@ int main()
     bool edgeToolActive = false;
     int startVertexIndex = -1;
 
+    vector<CircleShape> loops;
+    vector<vector<CircleShape>> vertexLoops(numVertices);
+
     vector<vector<int>> adjacencyMatrix(numVertices, vector<int>(numVertices, 0));
     vector<int> degrees(numVertices, 0);
 
@@ -267,7 +270,7 @@ int main()
                                 edges = prevEdgesStack.top();
                                 edgeCount = prevEdgeCountStack.top();    
                                 isLoopOrLine = prevIsLoopOrLineStack.top();           
-                                degreeIndex = prevDegreeIndexStack.top();
+                                degreeIndex = prevDegreeIndexStack.top();                                
 
                                 // Pop the previous state from the stacks
                                 prevEdgesStack.pop();
@@ -566,23 +569,52 @@ int main()
 
         // Draw the edges
         for (int i = 0; i < edgeCount; i++)
-        {
-            Vertex line[] = {edges[i * 2], edges[i * 2 + 1]};
-
-            if (isLoopOrLine[i] == "Loop")
             {
+                Vector2f startPoint = edges[i * 2].position;
+                Vector2f endPoint = edges[i * 2 + 1].position;
 
-            }  
-            if (isLoopOrLine[i] == "Line")
-            {
-                if (updatingDegree[i] % 2 == 0)
+                if (isLoopOrLine[i] == "Loop")
                 {
+                    int startVertex = -1;
+                    for (int j = 0; j < vertexCount; j++)
+                    {
+                        if (getCenter(vertices[j]) == startPoint)
+                        {
+                            startVertex = j;
+                            break;
+                        }
+                    }
 
+                    if (startVertex != -1)
+                    {
+                        float scaleFactor = 1.0f + 0.1f * updatingDegree[degreeIndex[i]];
+
+                        // Draw a loop (circle) at the center of the vertex
+                        CircleShape loop(25 * scaleFactor);
+                        loop.setFillColor(Color::Transparent);
+                        loop.setOutlineThickness(2.f);
+                        loop.setOutlineColor(Color(50, 100, 150, 255));
+                        loop.setOrigin(Vector2f(10, 10));
+                        loop.setPosition(startPoint);
+                        window.draw(loop);
+
+                        loops.push_back(loop);
+                    }
                 }
-                else
-                    window.draw(line, 2, Lines);
+                else if (isLoopOrLine[i] == "Line")
+                {
+                    // Draw the line if it's not a loop and the degree is odd
+                    if (updatingDegree[i] % 2 != 0)
+                    {
+                        Vertex line[] = {edges[i * 2], edges[i * 2 + 1]};
+                        window.draw(line, 2, Lines);
+                    }
+                }
             }
-        }
+            for (const auto& loop : loops)
+            {
+                window.draw(loop);
+            }
 
         // Draw the isomorphic graph vertices and edges
         for (size_t i = 0; i < isomorphicVertices1.size(); i++)
